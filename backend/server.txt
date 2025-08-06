@@ -1,0 +1,105 @@
+//import thư viện
+
+const express = require('express');
+const cor = require('cors');
+const {PrismaClient} = require('@prisma/client');
+const dotenv = require('dotenv')
+//nạp biến môi trường từ file .env
+dotenv.config();
+
+//khởi tạo ứng dựng press
+const app = express();
+const prisma = new PrismaClient();
+const port = process.env.PORT || 3000;
+
+app.use(cor());
+app.use(express.json());
+//
+//tạo get api/books
+app.get('/api/books', async (req, res) =>{
+    try {
+        // lấy ds từ csdl
+        const books = await prisma.book.findMany({
+            include: {
+                category: true, // bao gồm thông tin danh mục
+            },
+        });
+        res.json(books);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách:", error);
+        //trả về lỗi 500
+        res.status(500).json({error: 'Lỗi server khi lấy danh sách sách'});
+        
+    }
+})
+
+// tạo get api/books/:id
+app.get('/api/books/:id', async(req, res) =>{
+    // lấy id từ tham số
+    const {id} = req.params;
+    try {
+        //lấy sách theo id từ csdl
+        const book = await prisma.book.findUnique({
+            where:{
+                id: parseInt(id), // chuyển đổi id sang số nguyên    
+                
+            },
+             include: { // Dòng này là nguồn gốc của vấn đề
+            category: true,
+        },
+            
+        })
+        //kiểm tra nếu không tìm thấy sách
+        if(!book){
+            return res.status(404).json({error: 'Sách không tồn tại'});
+        }
+        //trả về kết quả
+        res.json(book);
+    } catch (error) {
+        console.error("Lỗi lấy danh sách: ", error);
+        //trả lỗi 500
+        return res.status(500).json({error: 'Lỗi server khi lấy sách'});
+        
+    }
+})
+
+// tạo get api/users
+app.get('/api/users', async(req, res) =>{
+    try {
+        //lấy dữ liệu từ db
+        const users = await prisma.user.findMany();
+        // trả về kết quả
+        res.json(users);
+
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách người dùng:", error);
+        //trả về lỗi 500
+        res.status(500).json({error: 'Lỗi server khi lấy danh sách user'})
+        
+    }
+})
+
+//tạo get api/categories
+app.get('/api/categories', async (req, res) =>{
+    try {
+        //lấy dl từ csdl
+        const categories = await prisma.category.findMany();
+        // trả về kết quả
+        res.json(categories)
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách danh mục:", error);
+        //trả lỗi 500
+        res.status(500).json({error: 'Lỗi server khi lấy danh sách danh mục'});
+        
+    }
+})
+
+
+
+
+
+
+// chạy server
+app.listen(port, () =>{
+    console.log(`Server is running on port ${port}`);
+})

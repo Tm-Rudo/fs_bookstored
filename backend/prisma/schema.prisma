@@ -1,0 +1,121 @@
+// File: schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// CHUẨN HÓA: Tên model PascalCase số ít, tên bảng snake_case số nhiều.
+// CHUẨN HÓA: Tên field camelCase, tên cột snake_case.
+// TỐT NHẤT: Thêm hành động cho khóa ngoại (onDelete, onUpdate).
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  phone     String?
+  email     String?
+  role      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  orders    Order[]
+  cartItems CartItem[]
+  Review    Review[]
+
+  @@map("users")
+}
+
+model Category {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+
+  books Book[]
+
+  @@map("categories")
+}
+
+model Book {
+  id            Int       @id @default(autoincrement())
+  title         String
+  author        String
+  description   String?
+  stock         Int
+  price         Decimal   @db.Decimal(12, 2)
+  publishedDate DateTime? @map("published_date")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  imageUrl String? @map("image_url")
+
+  categoryId Int      @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  orderDetails OrderDetail[]
+  cartItems    CartItem[]
+  Review       Review[]
+
+  @@map("books")
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  status    String
+  total     Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  orderDetails OrderDetail[]
+
+  @@map("orders")
+}
+
+model OrderDetail {
+  id       Int @id @default(autoincrement())
+  quantity Int
+
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  bookId Int  @map("book_id")
+  book   Book @relation(fields: [bookId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("order_details")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Nếu user bị xóa, giỏ hàng của họ cũng nên xóa theo
+
+  bookId Int  @map("book_id")
+  book   Book @relation(fields: [bookId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Nếu sách bị xóa, nó cũng nên biến mất khỏi giỏ hàng
+
+  @@map("cart_items")
+}
+
+//review
+// Thêm model này vào cuối file schema.prisma
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int // Điểm đánh giá, ví dụ từ 1 đến 5
+  comment   String? // Nội dung bình luận, có thể không có
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  bookId Int  @map("book_id")
+  book   Book @relation(fields: [bookId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("reviews")
+}

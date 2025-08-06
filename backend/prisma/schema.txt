@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//users table
+model Users {
+  id        Int         @id @default(autoincrement()) //khóa chính
+  username  String      @unique //tên đăng nhập, duy nhất
+  password  String // mạt khẩu
+  phone     String? //số điện thoại, có thể null
+  email     String? //email, có thể null
+  role      String //vai trò ( admin, user, etc.)
+  createdAt DateTime    @default(now()) //ngày tạo, mặc định là thời điểm tạo
+  Orders    Orders[]
+  Cart_item Cart_item[]
+}
+
+//thể loại
+model Categories {
+  id          Int     @id @default(autoincrement()) //khóa chính
+  name        String  @unique //tên thể loại, duy nhất
+  description String? //mô tả, có thể null
+  Books       Books[]
+}
+
+// sách
+model Books {
+  id            Int             @id @default(autoincrement()) //khóa chính
+  title         String // tiêu đề
+  author        String // tác giả
+  description   String? //mô tả , có thể null
+  publishedDate DateTime? //ngày xuất bản, có thể null
+  total         Float //giá sách
+  categoryId    Int //id thể loại
+  category      Categories      @relation(fields: [categoryId], references: [id]) //liên kết với thể loại
+  createdAt     DateTime        @default(now()) //ngày tạo, mặc định là thời điểm tạo
+  Order_Details Order_Details[]
+  Cart_item     Cart_item[]
+  stock         Int //số lượng sách trong kho
+}
+
+// đơn đặt
+model Orders {
+  id            Int             @id @default(autoincrement()) //khóa chính
+  userId        Int //id người dùng
+  user          Users           @relation(fields: [userId], references: [id]) // liêm kết với người dùng
+  status        String //trạng thái đơn hàng (pending, completed, cancelled, etc.
+  total         Float //tổng giá trị đơn hàng)
+  createdAt     DateTime        @default(now())
+  Order_Details Order_Details[]
+}
+
+// chi tiết đơn hàng
+model Order_Details {
+  id       Int    @id @default(autoincrement()) //khóa chính
+  orderId  Int //id đơn hàng
+  order    Orders @relation(fields: [orderId], references: [id]) // liên kết với bảng đơn hàngg
+  bookId   Int //id sách
+  book     Books  @relation(fields: [bookId], references: [id]) //liên kết với sách
+  quantity Int // số lượng sách trong đơn
+}
+
+// giỏ hàng
+model Cart_item {
+  id        Int      @id @default(autoincrement()) //khóa chính
+  userId    Int //id người dùng
+  user      Users    @relation(fields: [userId], references: [id]) //liên kết với người dùng
+  bookId    Int //id sách
+  book      Books    @relation(fields: [bookId], references: [id]) //liên kết với sách
+  quantity  Int //số lượng sách trong giỏ hàng
+  createdAt DateTime @default(now()) //ngày tạo, mặc định là thời điểm
+}
