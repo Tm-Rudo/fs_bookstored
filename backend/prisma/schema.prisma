@@ -99,7 +99,7 @@ model CartItem {
 }
 
 //review
-// Thêm model này vào cuối file schema.prisma
+
 
 model Review {
   id        Int      @id @default(autoincrement())
