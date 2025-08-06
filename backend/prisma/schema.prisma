@@ -9,10 +9,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// CHUẨN HÓA: Tên model PascalCase số ít, tên bảng snake_case số nhiều.
-// CHUẨN HÓA: Tên field camelCase, tên cột snake_case.
-// TỐT NHẤT: Thêm hành động cho khóa ngoại (onDelete, onUpdate).
-
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
