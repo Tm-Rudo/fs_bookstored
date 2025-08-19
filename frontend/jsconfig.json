@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    // ... các cấu hình khác
+    "strict": false,
+    "noImplicitAny": false // Cho phép biến có kiểu 'any' mà không cần khai báo tường minh
+  }
+}
